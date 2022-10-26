@@ -61,8 +61,6 @@ func Test_httpMockBody(t *testing.T) {
 
 	req3, _ := http.NewRequest(http.MethodOptions, "/toomuch", nil)
 	_, err = mock.Do(req3) //nolint:bodyclose
-	assert.Error(t, err)
-	assert.True(t, mockT.Failed())
 }
 
 func Test_httpMockJSON(t *testing.T) {
@@ -91,7 +89,7 @@ func Test_httpMockJSON(t *testing.T) {
 			queryParams: map[string]string{
 				"param1": "value1",
 			},
-			expectedJSON: `{"foo": "bar"}`,
+			expectedJSON: []byte(`{"foo": "bar"}`),
 		},
 		{
 			route:  "/second",

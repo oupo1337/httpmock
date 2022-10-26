@@ -11,7 +11,7 @@ type call struct {
 	returnStatus int
 	returnBody   string
 	expectedBody string
-	expectedJSON string
+	expectedJSON []byte
 	err          error
 	headers      map[string][]string
 	queryParams  map[string]string
@@ -45,7 +45,7 @@ func ExpectBody(expectedBody string) CallOption {
 
 func ExpectJSON(expectedJSON string) CallOption {
 	return func(c *call) {
-		c.expectedJSON = expectedJSON
+		c.expectedJSON = []byte(expectedJSON)
 	}
 }
 
@@ -82,6 +82,12 @@ func (c *Client) WithCall(method, route string, options ...CallOption) *Client {
 	}
 	c.transport.calls = append(c.transport.calls, call)
 	return c
+}
+
+func (c *Client) AssertExpectations(t *testing.T) {
+	if c.transport.index != len(c.transport.calls) {
+		t.Errorf("missing calls")
+	}
 }
 
 func New(t *testing.T) *Client {

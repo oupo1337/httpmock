@@ -8,9 +8,18 @@ import (
 )
 
 func Test_simpleRequest(t *testing.T) {
-	mock := httpmock.New(t).WithCall(http.MethodGet, "/path")
+	mock := httpmock.New(t).
+		WithCall(http.MethodGet, "/path")
 
 	simpleGetRequest(mock)
+	mock.AssertExpectations(t)
+}
+
+func Test_simpleRequest_missing_calls(t *testing.T) {
+	mock := httpmock.New(t).
+		WithCall(http.MethodGet, "/path")
+
+	mock.AssertExpectations(t)
 }
 
 func Test_simplePostRequestWithBody(t *testing.T) {
@@ -18,4 +27,5 @@ func Test_simplePostRequestWithBody(t *testing.T) {
 		WithCall(http.MethodPost, "/path", httpmock.ExpectBody(`{"hello": "world"}`))
 
 	simplePostRequestWithBody(mock)
+	mock.AssertExpectations(t)
 }

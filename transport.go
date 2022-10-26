@@ -1,13 +1,13 @@
 package httpmock
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 type transport struct {
@@ -43,11 +43,22 @@ func (transport *transport) assertJSON(r *http.Request, call call) {
 		if r.Body == nil {
 			transport.t.Errorf("expected body but received nothing")
 		}
-		data, err := io.ReadAll(r.Body)
+		actual, err := io.ReadAll(r.Body)
 		if err != nil {
 			transport.t.Errorf("io.ReadAll error: %s", err.Error())
 		}
-		assert.JSONEq(transport.t, call.expectedJSON, string(data))
+
+		var expectedJSONAsInterface, actualJSONAsInterface interface{}
+		if err := json.Unmarshal(call.expectedJSON, &expectedJSONAsInterface); err != nil {
+			transport.t.Errorf("Expected value ('%s') is not valid json.\nJSON parsing error: '%s'", call.expectedJSON, err.Error())
+		}
+		if err := json.Unmarshal(actual, &actualJSONAsInterface); err != nil {
+			transport.t.Errorf("Input ('%s') needs to be valid json.\nJSON parsing error: '%s'", actual, err.Error())
+		}
+
+		if !reflect.DeepEqual(expectedJSONAsInterface, actualJSONAsInterface) {
+			transport.t.Errorf("objects are not equal.")
+		}
 	}
 }
 
@@ -68,15 +79,16 @@ func (transport *transport) assertBody(r *http.Request, call call) {
 
 func (transport *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	transport.t.Helper()
-	if transport.index > len(transport.calls) {
+	if transport.index >= len(transport.calls) {
 		transport.t.Errorf("unexpected route call #%d", transport.index)
-		transport.t.FailNow()
+		return nil, fmt.Errorf("unexpected route call #%d", transport.index)
 	}
 	call := transport.calls[transport.index]
 	if r.URL.Path != call.route || r.Method != call.method {
 		transport.t.Errorf("unexpected route call #%d on route %s %s, expected %s %s",
 			transport.index, r.Method, r.URL.Path, call.method, call.route)
-		transport.t.FailNow()
+		return nil, fmt.Errorf("unexpected route call #%d on route %s %s, expected %s %s",
+			transport.index, r.Method, r.URL.Path, call.method, call.route)
 	}
 
 	transport.assertJSON(r, call)
