@@ -11,13 +11,13 @@ import (
 )
 
 type transport struct {
-	t     *testing.T
-	index int
-	calls []call
+	t        *testing.T
+	index    int
+	requests []request
 }
 
-func (transport *transport) assertHeaders(r *http.Request, call call) {
-	for name, values := range call.headers {
+func (transport *transport) assertHeaders(r *http.Request, req request) {
+	for name, values := range req.expectedHeaders {
 		requestValues, ok := r.Header[name]
 		if !ok {
 			transport.t.Errorf("header %q not set in request", name)
@@ -28,18 +28,18 @@ func (transport *transport) assertHeaders(r *http.Request, call call) {
 	}
 }
 
-func (transport *transport) assertQueryParams(r *http.Request, call call) {
+func (transport *transport) assertQueryParams(r *http.Request, req request) {
 	requestQuery := r.URL.Query()
-	for name, value := range call.queryParams {
-		requestValue := requestQuery.Get(name)
-		if value != requestValue {
+	for name, values := range req.expectedQueryParams {
+		requestValues := requestQuery[name]
+		if !reflect.DeepEqual(values, requestValues) {
 			transport.t.Errorf("query parameter %q has bad value", name)
 		}
 	}
 }
 
-func (transport *transport) assertJSON(r *http.Request, call call) {
-	if len(call.expectedJSON) > 0 {
+func (transport *transport) assertJSON(r *http.Request, req request) {
+	if len(req.expectedJSON) > 0 {
 		if r.Body == nil {
 			transport.t.Errorf("expected body but received nothing")
 		}
@@ -49,8 +49,8 @@ func (transport *transport) assertJSON(r *http.Request, call call) {
 		}
 
 		var expectedJSONAsInterface, actualJSONAsInterface interface{}
-		if err := json.Unmarshal(call.expectedJSON, &expectedJSONAsInterface); err != nil {
-			transport.t.Errorf("Expected value ('%s') is not valid json.\nJSON parsing error: '%s'", call.expectedJSON, err.Error())
+		if err := json.Unmarshal(req.expectedJSON, &expectedJSONAsInterface); err != nil {
+			transport.t.Errorf("Expected value ('%s') is not valid json.\nJSON parsing error: '%s'", req.expectedJSON, err.Error())
 		}
 		if err := json.Unmarshal(actual, &actualJSONAsInterface); err != nil {
 			transport.t.Errorf("Input ('%s') needs to be valid json.\nJSON parsing error: '%s'", actual, err.Error())
@@ -62,8 +62,8 @@ func (transport *transport) assertJSON(r *http.Request, call call) {
 	}
 }
 
-func (transport *transport) assertBody(r *http.Request, call call) {
-	if len(call.expectedBody) > 0 {
+func (transport *transport) assertBody(r *http.Request, req request) {
+	if len(req.expectedBody) > 0 {
 		if r.Body == nil {
 			transport.t.Errorf("expected body but received nothing")
 		}
@@ -71,7 +71,7 @@ func (transport *transport) assertBody(r *http.Request, call call) {
 		if err != nil {
 			transport.t.Errorf("io.ReadAll error: %s", err.Error())
 		}
-		if call.expectedBody != string(data) {
+		if req.expectedBody != string(data) {
 			transport.t.Errorf("expected body does not match received body")
 		}
 	}
@@ -79,30 +79,31 @@ func (transport *transport) assertBody(r *http.Request, call call) {
 
 func (transport *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	transport.t.Helper()
-	if transport.index >= len(transport.calls) {
-		transport.t.Errorf("unexpected route call #%d", transport.index)
-		return nil, fmt.Errorf("unexpected route call #%d", transport.index)
-	}
-	call := transport.calls[transport.index]
-	if r.URL.Path != call.route || r.Method != call.method {
-		transport.t.Errorf("unexpected route call #%d on route %s %s, expected %s %s",
-			transport.index, r.Method, r.URL.Path, call.method, call.route)
-		return nil, fmt.Errorf("unexpected route call #%d on route %s %s, expected %s %s",
-			transport.index, r.Method, r.URL.Path, call.method, call.route)
+	if transport.index >= len(transport.requests) {
+		transport.t.Errorf("unexpected route request #%d", transport.index)
+		return nil, fmt.Errorf("unexpected route request #%d", transport.index)
 	}
 
-	transport.assertJSON(r, call)
-	transport.assertBody(r, call)
-	transport.assertHeaders(r, call)
-	transport.assertQueryParams(r, call)
+	req := transport.requests[transport.index]
+	if r.URL.Path != req.route || r.Method != req.method {
+		transport.t.Errorf("unexpected route request #%d on route %s %s, expected %s %s",
+			transport.index, r.Method, r.URL.Path, req.method, req.route)
+		return nil, fmt.Errorf("unexpected route request #%d on route %s %s, expected %s %s",
+			transport.index, r.Method, r.URL.Path, req.method, req.route)
+	}
+
+	transport.assertJSON(r, req)
+	transport.assertBody(r, req)
+	transport.assertHeaders(r, req)
+	transport.assertQueryParams(r, req)
 
 	transport.index++
-	if call.err != nil {
-		return nil, call.err
+	if req.returnError != nil {
+		return nil, req.returnError
 	}
 	return &http.Response{
-		Status:     http.StatusText(call.returnStatus),
-		StatusCode: call.returnStatus,
-		Body:       io.NopCloser(strings.NewReader(call.returnBody)),
+		Status:     http.StatusText(req.returnStatus),
+		StatusCode: req.returnStatus,
+		Body:       io.NopCloser(strings.NewReader(req.returnBody)),
 	}, nil
 }
