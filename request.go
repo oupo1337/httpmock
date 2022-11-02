@@ -19,8 +19,7 @@ type request struct {
 
 func newMockRequest(method, route string) request {
 	return request{
-		method:       method,
-		route:        route,
-		returnStatus: http.StatusOK,
+		method: method,
+		route:  route,
 	}
 }

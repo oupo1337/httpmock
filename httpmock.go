@@ -1,6 +1,7 @@
 package httpmock
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
@@ -9,32 +10,39 @@ import (
 type CallOption func(*request)
 
 func ReturnError(err error) CallOption {
-	return func(c *request) {
-		c.returnError = err
+	return func(r *request) {
+		r.returnError = err
 	}
 }
 
 func ReturnStatus(status int) CallOption {
-	return func(c *request) {
-		c.returnStatus = status
+	return func(r *request) {
+		r.returnStatus = status
 	}
 }
 
-func ReturnBody(body string) CallOption {
-	return func(c *request) {
-		c.returnBody = body
+func ReturnBodyRaw(body string) CallOption {
+	return func(r *request) {
+		r.returnBody = body
+	}
+}
+
+func ReturnBodyFromObject(object interface{}) CallOption {
+	return func(r *request) {
+		body, _ := json.Marshal(&object)
+		r.returnBody = string(body)
 	}
 }
 
 func ExpectBody(expectedBody string) CallOption {
-	return func(c *request) {
-		c.expectedBody = expectedBody
+	return func(r *request) {
+		r.expectedBody = expectedBody
 	}
 }
 
 func ExpectJSON(expectedJSON string) CallOption {
-	return func(c *request) {
-		c.expectedJSON = []byte(expectedJSON)
+	return func(r *request) {
+		r.expectedJSON = []byte(expectedJSON)
 	}
 }
 

@@ -18,7 +18,7 @@ func Test_httpMockBody(t *testing.T) {
 			ExpectBody("foobar"),
 			ExpectQueryParam("param1", "value1"),
 			ReturnStatus(http.StatusOK),
-			ReturnBody("hello world"),
+			ReturnBodyRaw("hello world"),
 		).
 		WithRequest(http.MethodPost, "/second",
 			ReturnError(fmt.Errorf("oops")),
@@ -39,10 +39,9 @@ func Test_httpMockBody(t *testing.T) {
 			expectedBody: "foobar",
 		},
 		{
-			route:        "/second",
-			method:       http.MethodPost,
-			returnStatus: http.StatusOK,
-			returnError:  fmt.Errorf("oops"),
+			route:       "/second",
+			method:      http.MethodPost,
+			returnError: fmt.Errorf("oops"),
 		},
 	}, mock.transport.requests)
 	assert.Equal(t, 0, mock.transport.index)
@@ -73,10 +72,11 @@ func Test_httpMockJSON(t *testing.T) {
 			ExpectJSON(`{"foo": "bar"}`),
 			ExpectQueryParam("param1", "value1"),
 			ReturnStatus(http.StatusNoContent),
-			ReturnBody("hello world"),
+			ReturnBodyRaw("hello world"),
 		).
 		WithRequest(http.MethodPut, "/second",
 			ExpectQueryParamValues("param", []string{"value1", "value2"}),
+			ReturnStatus(http.StatusOK),
 		).
 		WithRequest(http.MethodPost, "/third",
 			ReturnError(fmt.Errorf("oops")),
@@ -105,10 +105,9 @@ func Test_httpMockJSON(t *testing.T) {
 			},
 		},
 		{
-			route:        "/third",
-			method:       http.MethodPost,
-			returnStatus: http.StatusOK,
-			returnError:  fmt.Errorf("oops"),
+			route:       "/third",
+			method:      http.MethodPost,
+			returnError: fmt.Errorf("oops"),
 		},
 	}, mock.transport.requests)
 	assert.Equal(t, 0, mock.transport.index)
