@@ -1,6 +1,8 @@
 package example
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -17,11 +19,10 @@ func simpleGetRequest(client doer) {
 
 	response, err := client.Do(req)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
-	if response.StatusCode != http.StatusOK {
-		return
-	}
+	fmt.Printf("%#v\n", response)
 }
 
 func simplePostRequestWithBody(client doer) {
@@ -33,9 +34,13 @@ func simplePostRequestWithBody(client doer) {
 
 	response, err := client.Do(req)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
-	if response.StatusCode != http.StatusOK {
+	fmt.Printf("%#v\n", response)
+	responseData, err := io.ReadAll(response.Body)
+	if err != nil {
 		return
 	}
+	fmt.Printf("responseData: %s\n", string(responseData))
 }

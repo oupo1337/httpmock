@@ -57,3 +57,20 @@ func Test_simplePostReturnsAnError(t *testing.T) {
 	simplePostRequestWithBody(mock)
 	mock.AssertExpectations(t)
 }
+
+func Test_simplePostReturnsBodyFromObject(t *testing.T) {
+	object := struct {
+		Hello string `json:"hello"`
+	}{
+		Hello: "world",
+	}
+
+	mock := httpmock.New(t).
+		WithRequest(http.MethodPost, "/path",
+			httpmock.ReturnStatus(http.StatusOK),
+			httpmock.ReturnBodyFromObject(object),
+		)
+
+	simplePostRequestWithBody(mock)
+	mock.AssertExpectations(t)
+}
