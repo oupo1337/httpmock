@@ -68,3 +68,16 @@ func Test_advanced(t *testing.T) {
 ## Documentation
 
 ### Options functions
+
+| Name                   | Description                                                                                      | Type             |
+|------------------------|--------------------------------------------------------------------------------------------------|------------------|
+| ReturnStatus           | Sets the http status code returned by the request.                                               | int              |
+| ReturnBodyRaw          | Sets the body returned by the request.                                                           | string           |
+| ReturnBodyFromObject   | Sets the body returned by the request from an object. (Using json.Marshal function)              | interface{}      |
+| ReturnError            | Sets an error returned by the http client.                                                       | error            |
+| ExpectBody             | Will expect a body in the received request and asserts that strings are equal.                   | string           |
+| ExpectJSON             | Will expect a body in the received request and asserts that the JSONs are equal.                 | string           |
+| ExpectHeader           | Will expect a header in the received request and asserts that the name and value are equal.      | string, string   |
+| ExpectQueryParamValues | Will expect a query param in the received request and assert that the name and values are equal. | string, []string |
+| ExpectQueryParam       | Will expect a query param in the received request and assert that the name and values are equal. | string, string   |
+
