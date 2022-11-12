@@ -27,7 +27,7 @@ func Test_basic(t *testing.T) {
     doSomething(mock)
 	
     // We check that all expected requests were done. 
-    mock.AssertExpectations(t)
+    mock.AssertExpectations()
 }
 ```
 
@@ -59,7 +59,7 @@ func Test_advanced(t *testing.T) {
     doSomething(mock)
 
     // We check that all expected requests were done. 
-    mock.AssertExpectations(t)
+    mock.AssertExpectations()
 }
 ```
 

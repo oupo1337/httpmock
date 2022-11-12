@@ -10,6 +10,8 @@ import (
 	"testing"
 )
 
+var UnexpectedRequestErr = fmt.Errorf("unexpected request")
+
 type transport struct {
 	t        *testing.T
 	requests []*request
@@ -80,27 +82,32 @@ func assertBody(r *http.Request, req *request) bool {
 	return true
 }
 
-func (t *transport) matchRequest(r *http.Request) *request {
+func (t *transport) matchRequest(r *http.Request) (*request, *request) {
+	var closestReq *request
 	for _, req := range t.requests {
-		if req.method == r.Method && req.path == r.URL.Path &&
-			assertJSON(r, req) &&
-			assertBody(r, req) &&
-			assertHeaders(r, req) &&
-			assertQueryParams(r, req) &&
-			req.called == false {
-			return req
+		if req.path == r.URL.Path {
+			if req.method == r.Method && assertJSON(r, req) && assertBody(r, req) && assertHeaders(r, req) && assertQueryParams(r, req) {
+				if !req.called {
+					return req, nil
+				}
+			}
+			closestReq = req
 		}
 	}
-	return nil
+	return nil, closestReq
 }
 
 func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	t.t.Helper()
 
-	req := t.matchRequest(r)
+	req, closestReq := t.matchRequest(r)
+	if closestReq != nil {
+		t.t.Errorf("Unexpected request on route [%s] %q the closest request I have is:\n%s", r.Method, r.URL.Path, closestReq.String())
+		return nil, UnexpectedRequestErr
+	}
 	if req == nil {
-		t.t.Errorf("unexpected request on route %s %s", r.Method, r.URL.Path)
-		return nil, fmt.Errorf("unexpected request on route %s %s", r.Method, r.URL.Path)
+		t.t.Errorf("Unexpected request on route [%s] %q", r.Method, r.URL.Path)
+		return nil, UnexpectedRequestErr
 	}
 
 	req.called = true

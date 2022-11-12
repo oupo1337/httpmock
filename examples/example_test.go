@@ -15,7 +15,22 @@ func Test_simpleRequest(t *testing.T) {
 		)
 
 	simpleGetRequest(mock)
-	mock.AssertExpectations(t)
+	mock.AssertExpectations()
+}
+
+func Test_closeRequest(t *testing.T) {
+	mock := httpmock.New(t).
+		WithRequest(http.MethodPost, "/path",
+			httpmock.ExpectQueryParam("query", "param"),
+			httpmock.ExpectHeader("hello", []string{"world"}),
+			httpmock.ExpectHeader("bonjour", []string{"monde"}),
+			httpmock.ExpectHeader("hola", []string{"mundo"}),
+			httpmock.ExpectJSON(`{"hello":"world"}`),
+			httpmock.ReturnStatus(http.StatusOK),
+		)
+
+	simpleGetRequest(mock)
+	mock.AssertExpectations()
 }
 
 // This test will fail
@@ -24,7 +39,7 @@ func Test_simpleRequest_missing_calls(t *testing.T) {
 		WithRequest(http.MethodGet, "/path").
 		WithRequest(http.MethodPost, "/test")
 
-	mock.AssertExpectations(t)
+	mock.AssertExpectations()
 }
 
 func Test_simplePostRequestWithBody(t *testing.T) {
@@ -35,7 +50,7 @@ func Test_simplePostRequestWithBody(t *testing.T) {
 		)
 
 	simplePostRequestWithBody(mock)
-	mock.AssertExpectations(t)
+	mock.AssertExpectations()
 }
 
 func Test_simplePostRequestJSON(t *testing.T) {
@@ -46,7 +61,7 @@ func Test_simplePostRequestJSON(t *testing.T) {
 		)
 
 	simplePostRequestWithBody(mock)
-	mock.AssertExpectations(t)
+	mock.AssertExpectations()
 }
 
 func Test_simplePostReturnsAnError(t *testing.T) {
@@ -56,7 +71,7 @@ func Test_simplePostReturnsAnError(t *testing.T) {
 		)
 
 	simplePostRequestWithBody(mock)
-	mock.AssertExpectations(t)
+	mock.AssertExpectations()
 }
 
 func Test_simplePostReturnsBodyFromObject(t *testing.T) {
@@ -73,5 +88,5 @@ func Test_simplePostReturnsBodyFromObject(t *testing.T) {
 		)
 
 	simplePostRequestWithBody(mock)
-	mock.AssertExpectations(t)
+	mock.AssertExpectations()
 }

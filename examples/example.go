@@ -1,10 +1,13 @@
 package example
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/oupo1337/httpmock"
 )
 
 type doer interface {
@@ -18,6 +21,9 @@ func simpleGetRequest(client doer) {
 	}
 
 	response, err := client.Do(req)
+	if errors.Is(err, httpmock.UnexpectedRequestErr) {
+		return
+	}
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -33,6 +39,9 @@ func simplePostRequestWithBody(client doer) {
 	}
 
 	response, err := client.Do(req)
+	if errors.Is(err, httpmock.UnexpectedRequestErr) {
+		return
+	}
 	if err != nil {
 		fmt.Println(err)
 		return

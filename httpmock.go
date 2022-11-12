@@ -87,10 +87,10 @@ func (c *Client) WithRequest(method, route string, options ...RequestOption) *Cl
 	return c
 }
 
-func (c *Client) AssertExpectations(t *testing.T) {
+func (c *Client) AssertExpectations() {
 	for _, req := range c.transport.requests {
 		if !req.called {
-			t.Errorf("httpmock should have more request: expected request %s %s", req.method, req.path)
+			c.transport.t.Errorf("httpmock should have more request: expected request [%s] %q", req.method, req.path)
 		}
 	}
 }
