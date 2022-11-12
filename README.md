@@ -63,6 +63,10 @@ func Test_advanced(t *testing.T) {
 }
 ```
 
+### More examples
+
+See example file [here](examples/example_test.go)
+
 ## Documentation
 
 ### Options functions
