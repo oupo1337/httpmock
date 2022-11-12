@@ -43,8 +43,6 @@ func Test_advanced(t *testing.T) {
     // It's also waiting for a DELETE request on /route
     // returning a 204 status code.
     // It expects a query param.
-    //
-    // Calls should be done in the order they are defined.
     mock := httpmock.New(t).
         WithRequest(http.MethodPost, "/form",
             httpmock.ExpectBody(`{"some": "data"}`),

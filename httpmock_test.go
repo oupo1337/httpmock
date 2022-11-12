@@ -24,9 +24,9 @@ func Test_httpMockBody(t *testing.T) {
 			ReturnError(fmt.Errorf("oops")),
 		)
 
-	assert.Equal(t, []request{
+	assert.Equal(t, []*request{
 		{
-			route:        "/first",
+			path:         "/first",
 			method:       http.MethodPost,
 			returnStatus: http.StatusOK,
 			returnBody:   "hello world",
@@ -39,29 +39,30 @@ func Test_httpMockBody(t *testing.T) {
 			expectedBody: "foobar",
 		},
 		{
-			route:       "/second",
+			path:        "/second",
 			method:      http.MethodPost,
 			returnError: fmt.Errorf("oops"),
 		},
 	}, mock.transport.requests)
-	assert.Equal(t, 0, mock.transport.index)
 
 	req1, _ := http.NewRequest(http.MethodPost, "/first?param1=value1", strings.NewReader("foobar"))
 	req1.Header.Add("Authorization", "Bearer TOKEN")
 	response1, err := mock.Do(req1) //nolint:bodyclose
 	assert.NoError(t, err)
+	assert.True(t, mock.transport.requests[0].called)
 	assert.Equal(t, response1.StatusCode, http.StatusOK)
-	assert.Equal(t, 1, mock.transport.index)
 	assert.False(t, mockT.Failed())
 
 	req2, _ := http.NewRequest(http.MethodPost, "/second", nil)
 	_, err = mock.Do(req2) //nolint:bodyclose
 	assert.Error(t, err)
-	assert.Equal(t, 2, mock.transport.index)
+	assert.True(t, mock.transport.requests[1].called)
 	assert.False(t, mockT.Failed())
 
 	req3, _ := http.NewRequest(http.MethodOptions, "/toomuch", nil)
 	_, err = mock.Do(req3) //nolint:bodyclose
+	assert.Error(t, err)
+	assert.True(t, mockT.Failed())
 }
 
 func Test_httpMockJSON(t *testing.T) {
@@ -82,9 +83,9 @@ func Test_httpMockJSON(t *testing.T) {
 			ReturnError(fmt.Errorf("oops")),
 		)
 
-	assert.Equal(t, []request{
+	assert.Equal(t, []*request{
 		{
-			route:        "/first",
+			path:         "/first",
 			method:       http.MethodPost,
 			returnStatus: http.StatusNoContent,
 			returnBody:   "hello world",
@@ -97,7 +98,7 @@ func Test_httpMockJSON(t *testing.T) {
 			expectedJSON: []byte(`{"foo": "bar"}`),
 		},
 		{
-			route:        "/second",
+			path:         "/second",
 			method:       http.MethodPut,
 			returnStatus: http.StatusOK,
 			expectedQueryParams: url.Values{
@@ -105,32 +106,31 @@ func Test_httpMockJSON(t *testing.T) {
 			},
 		},
 		{
-			route:       "/third",
+			path:        "/third",
 			method:      http.MethodPost,
 			returnError: fmt.Errorf("oops"),
 		},
 	}, mock.transport.requests)
-	assert.Equal(t, 0, mock.transport.index)
 
 	req1, _ := http.NewRequest(http.MethodPost, "/first?param1=value1", strings.NewReader(`{"foo": "bar"}`))
 	req1.Header.Add("Authorization", "Bearer TOKEN")
 	response1, err := mock.Do(req1) //nolint:bodyclose
 	assert.NoError(t, err)
 	assert.Equal(t, response1.StatusCode, http.StatusNoContent)
-	assert.Equal(t, 1, mock.transport.index)
+	assert.True(t, mock.transport.requests[0].called)
 	assert.False(t, mockT.Failed())
 
 	req2, _ := http.NewRequest(http.MethodPut, "/second?param=value1&param=value2", nil)
 	response2, err := mock.Do(req2) //nolint:bodyclose
 	assert.NoError(t, err)
 	assert.Equal(t, response2.StatusCode, http.StatusOK)
-	assert.Equal(t, 2, mock.transport.index)
+	assert.True(t, mock.transport.requests[1].called)
 	assert.False(t, mockT.Failed())
 
 	req3, _ := http.NewRequest(http.MethodPost, "/third", nil)
 	_, err = mock.Do(req3) //nolint:bodyclose
 	assert.Error(t, err)
-	assert.Equal(t, 3, mock.transport.index)
+	assert.True(t, mock.transport.requests[2].called)
 	assert.False(t, mockT.Failed())
 
 	req4, _ := http.NewRequest(http.MethodOptions, "/toomuch", nil)
@@ -143,8 +143,7 @@ func Test_httpMock_wrong_call(t *testing.T) {
 	mockT := new(testing.T)
 	mock := New(mockT)
 
-	assert.Equal(t, []request{}, mock.transport.requests)
-	assert.Equal(t, 0, mock.transport.index)
+	assert.Equal(t, []*request{}, mock.transport.requests)
 
 	req0, _ := http.NewRequest(http.MethodGet, "/bad", nil)
 	_, err := mock.Do(req0) //nolint:bodyclose

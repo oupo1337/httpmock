@@ -7,7 +7,7 @@ import (
 
 type request struct {
 	method              string
-	route               string
+	path                string
 	returnStatus        int
 	returnBody          string
 	returnError         error
@@ -15,11 +15,12 @@ type request struct {
 	expectedJSON        []byte
 	expectedHeaders     http.Header
 	expectedQueryParams url.Values
+	called              bool
 }
 
-func newMockRequest(method, route string) request {
+func newMockRequest(method, path string) request {
 	return request{
 		method: method,
-		route:  route,
+		path:   path,
 	}
 }

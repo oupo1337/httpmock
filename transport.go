@@ -12,92 +12,98 @@ import (
 
 type transport struct {
 	t        *testing.T
-	index    int
-	requests []request
+	requests []*request
 }
 
-func (transport *transport) assertHeaders(r *http.Request, req request) {
+func assertHeaders(r *http.Request, req *request) bool {
 	for name, values := range req.expectedHeaders {
 		requestValues, ok := r.Header[name]
 		if !ok {
-			transport.t.Errorf("header %q not set in request", name)
+			return false
 		}
 		if !reflect.DeepEqual(values, requestValues) {
-			transport.t.Errorf("header %q has bad values", name)
+			return false
 		}
 	}
+	return true
 }
 
-func (transport *transport) assertQueryParams(r *http.Request, req request) {
+func assertQueryParams(r *http.Request, req *request) bool {
 	requestQuery := r.URL.Query()
 	for name, values := range req.expectedQueryParams {
 		requestValues := requestQuery[name]
 		if !reflect.DeepEqual(values, requestValues) {
-			transport.t.Errorf("query parameter %q has bad value", name)
+			return false
 		}
 	}
+	return true
 }
 
-func (transport *transport) assertJSON(r *http.Request, req request) {
+func assertJSON(r *http.Request, req *request) bool {
 	if len(req.expectedJSON) > 0 {
 		if r.Body == nil {
-			transport.t.Errorf("expected body but received nothing")
+			return false
 		}
 		actual, err := io.ReadAll(r.Body)
 		if err != nil {
-			transport.t.Errorf("io.ReadAll error: %s", err.Error())
+			return false
 		}
 
 		var expectedJSONAsInterface, actualJSONAsInterface interface{}
 		if err := json.Unmarshal(req.expectedJSON, &expectedJSONAsInterface); err != nil {
-			transport.t.Errorf("Expected value ('%s') is not valid json.\nJSON parsing error: '%s'", req.expectedJSON, err.Error())
+			return false
 		}
 		if err := json.Unmarshal(actual, &actualJSONAsInterface); err != nil {
-			transport.t.Errorf("Input ('%s') needs to be valid json.\nJSON parsing error: '%s'", actual, err.Error())
+			return false
 		}
 
 		if !reflect.DeepEqual(expectedJSONAsInterface, actualJSONAsInterface) {
-			transport.t.Errorf("objects are not equal.")
+			return false
 		}
 	}
+	return true
 }
 
-func (transport *transport) assertBody(r *http.Request, req request) {
+func assertBody(r *http.Request, req *request) bool {
 	if len(req.expectedBody) > 0 {
 		if r.Body == nil {
-			transport.t.Errorf("expected body but received nothing")
+			return false
 		}
 		data, err := io.ReadAll(r.Body)
 		if err != nil {
-			transport.t.Errorf("io.ReadAll error: %s", err.Error())
+			return false
 		}
 		if req.expectedBody != string(data) {
-			transport.t.Errorf("expected body does not match received body")
+			return false
 		}
 	}
+	return true
 }
 
-func (transport *transport) RoundTrip(r *http.Request) (*http.Response, error) {
-	transport.t.Helper()
-	if transport.index >= len(transport.requests) {
-		transport.t.Errorf("unexpected route request #%d", transport.index)
-		return nil, fmt.Errorf("unexpected route request #%d", transport.index)
+func (t *transport) matchRequest(r *http.Request) *request {
+	for _, req := range t.requests {
+		if req.method == r.Method && req.path == r.URL.Path &&
+			assertJSON(r, req) &&
+			assertBody(r, req) &&
+			assertHeaders(r, req) &&
+			assertQueryParams(r, req) &&
+			req.called == false {
+			return req
+		}
+	}
+	return nil
+}
+
+func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
+	t.t.Helper()
+
+	req := t.matchRequest(r)
+	if req == nil {
+		t.t.Errorf("unexpected request on route %s %s", r.Method, r.URL.Path)
+		return nil, fmt.Errorf("unexpected request on route %s %s", r.Method, r.URL.Path)
 	}
 
-	req := transport.requests[transport.index]
-	if r.URL.Path != req.route || r.Method != req.method {
-		transport.t.Errorf("unexpected route request #%d on route %s %s, expected %s %s",
-			transport.index, r.Method, r.URL.Path, req.method, req.route)
-		return nil, fmt.Errorf("unexpected route request #%d on route %s %s, expected %s %s",
-			transport.index, r.Method, r.URL.Path, req.method, req.route)
-	}
-
-	transport.assertJSON(r, req)
-	transport.assertBody(r, req)
-	transport.assertHeaders(r, req)
-	transport.assertQueryParams(r, req)
-
-	transport.index++
+	req.called = true
 	if req.returnError != nil {
 		return nil, req.returnError
 	}

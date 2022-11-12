@@ -21,7 +21,8 @@ func Test_simpleRequest(t *testing.T) {
 // This test will fail
 func Test_simpleRequest_missing_calls(t *testing.T) {
 	mock := httpmock.New(t).
-		WithRequest(http.MethodGet, "/path")
+		WithRequest(http.MethodGet, "/path").
+		WithRequest(http.MethodPost, "/test")
 
 	mock.AssertExpectations(t)
 }

@@ -83,20 +83,22 @@ func (c *Client) WithRequest(method, route string, options ...RequestOption) *Cl
 	for _, option := range options {
 		option(&req)
 	}
-	c.transport.requests = append(c.transport.requests, req)
+	c.transport.requests = append(c.transport.requests, &req)
 	return c
 }
 
 func (c *Client) AssertExpectations(t *testing.T) {
-	if c.transport.index < len(c.transport.requests) {
-		t.Errorf("httpmock should have more requests")
+	for _, req := range c.transport.requests {
+		if !req.called {
+			t.Errorf("httpmock should have more request: expected request %s %s", req.method, req.path)
+		}
 	}
 }
 
 func New(t *testing.T) *Client {
 	mockTransport := &transport{
 		t:        t,
-		requests: make([]request, 0),
+		requests: make([]*request, 0),
 	}
 
 	return &Client{
