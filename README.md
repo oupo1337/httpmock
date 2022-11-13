@@ -7,7 +7,9 @@ It's designed to be as simple as possible, first you describe the client behavio
  - What status should it return ?
  - Should it receive headers ? Query parameters ? A body ?
 
-Then you use your mock client, and you finish by checking that all expected calls were done. 
+You can now use the mock client as a regular HTTP client in your code.
+
+Finally, you check that all expected calls were done with the mock client by the tested code. 
 
 ## Examples
 
