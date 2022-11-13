@@ -48,10 +48,3 @@ func (r *request) String() string {
 	}
 	return builder.String()
 }
-
-func newMockRequest(method, path string) request {
-	return request{
-		method: method,
-		path:   path,
-	}
-}

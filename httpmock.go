@@ -78,12 +78,15 @@ type Client struct {
 	transport *transport
 }
 
-func (c *Client) WithRequest(method, route string, options ...RequestOption) *Client {
-	req := newMockRequest(method, route)
-	for _, option := range options {
-		option(&req)
+func (c *Client) WithRequest(method, path string, options ...RequestOption) *Client {
+	req := &request{
+		method: method,
+		path:   path,
 	}
-	c.transport.requests = append(c.transport.requests, &req)
+	for _, option := range options {
+		option(req)
+	}
+	c.transport.requests = append(c.transport.requests, req)
 	return c
 }
 
