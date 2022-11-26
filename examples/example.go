@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/oupo1337/httpmock"
 )
@@ -52,4 +53,28 @@ func simplePostRequestWithBody(client doer) {
 		return
 	}
 	fmt.Printf("responseData: %s\n", string(responseData))
+}
+
+func simpleRequestGoRoutines(client doer, times int) {
+	req, err := http.NewRequest(http.MethodGet, "https://fake.url/path", nil)
+	if err != nil {
+		return
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(times)
+	for i := 0; i < times; i++ {
+		go func() {
+			defer wg.Done()
+			_, err := client.Do(req)
+			if errors.Is(err, httpmock.UnexpectedRequestErr) {
+				return
+			}
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}()
+	}
+	wg.Wait()
 }

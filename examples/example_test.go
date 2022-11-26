@@ -90,3 +90,40 @@ func Test_simplePostReturnsBodyFromObject(t *testing.T) {
 	simplePostRequestWithBody(mock)
 	mock.AssertExpectations()
 }
+
+func Test_simpleRequestGoRoutines(t *testing.T) {
+	mock := httpmock.New(t).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK)).
+		WithRequest(http.MethodGet, "/path", httpmock.ReturnStatus(http.StatusOK))
+
+	simpleRequestGoRoutines(mock, 30)
+	mock.AssertExpectations()
+}

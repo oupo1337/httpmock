@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 )
 
 var UnexpectedRequestErr = fmt.Errorf("unexpected request")
 
 type transport struct {
+	m        sync.Mutex
 	t        *testing.T
 	requests []*request
 }
@@ -85,11 +87,9 @@ func assertBody(r *http.Request, req *request) bool {
 func (t *transport) matchRequest(r *http.Request) (*request, *request) {
 	var closestReq *request
 	for _, req := range t.requests {
-		if req.path == r.URL.Path {
+		if !req.called && req.path == r.URL.Path {
 			if req.method == r.Method && assertJSON(r, req) && assertBody(r, req) && assertHeaders(r, req) && assertQueryParams(r, req) {
-				if !req.called {
-					return req, nil
-				}
+				return req, nil
 			}
 			closestReq = req
 		}
@@ -99,6 +99,8 @@ func (t *transport) matchRequest(r *http.Request) (*request, *request) {
 
 func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	t.t.Helper()
+	t.m.Lock()
+	defer t.m.Unlock()
 
 	req, closestReq := t.matchRequest(r)
 	if closestReq != nil {
@@ -109,8 +111,8 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 		t.t.Errorf("Unexpected request on route [%s] %q", r.Method, r.URL.Path)
 		return nil, UnexpectedRequestErr
 	}
-
 	req.called = true
+
 	if req.returnError != nil {
 		return nil, req.returnError
 	}
