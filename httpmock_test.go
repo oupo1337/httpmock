@@ -18,13 +18,13 @@ func Test_httpMockBody(t *testing.T) {
 			ExpectBody("foobar"),
 			ExpectQueryParam("param1", "value1"),
 			ReturnStatus(http.StatusOK),
-			ReturnBodyRaw("hello world"),
+			ReturnBody("hello world"),
 		).
 		WithRequest(http.MethodPost, "/second",
 			ReturnError(fmt.Errorf("oops")),
 		)
 
-	assert.Equal(t, []*request{
+	assert.Equal(t, []*Request{
 		{
 			path:         "/first",
 			method:       http.MethodPost,
@@ -36,12 +36,14 @@ func Test_httpMockBody(t *testing.T) {
 			expectedQueryParams: url.Values{
 				"param1": {"value1"},
 			},
-			expectedBody: "foobar",
+			expectedBody:        "foobar",
+			expectedTimesCalled: 1,
 		},
 		{
-			path:        "/second",
-			method:      http.MethodPost,
-			returnError: fmt.Errorf("oops"),
+			path:                "/second",
+			method:              http.MethodPost,
+			returnError:         fmt.Errorf("oops"),
+			expectedTimesCalled: 1,
 		},
 	}, mock.transport.requests)
 
@@ -53,7 +55,7 @@ func Test_httpMockBody(t *testing.T) {
 	}
 
 	assert.NoError(t, err)
-	assert.True(t, mock.transport.requests[0].called)
+	assert.Equal(t, 1, mock.transport.requests[0].timesCalled)
 	assert.Equal(t, response1.StatusCode, http.StatusOK)
 	assert.False(t, mockT.Failed())
 
@@ -64,7 +66,7 @@ func Test_httpMockBody(t *testing.T) {
 	}
 
 	assert.Error(t, err)
-	assert.True(t, mock.transport.requests[1].called)
+	assert.Equal(t, 1, mock.transport.requests[1].timesCalled)
 	assert.False(t, mockT.Failed())
 
 	req3, _ := http.NewRequest(http.MethodOptions, "/toomuch", nil)
@@ -85,7 +87,7 @@ func Test_httpMockJSON(t *testing.T) {
 			ExpectJSON(`{"foo": "bar"}`),
 			ExpectQueryParam("param1", "value1"),
 			ReturnStatus(http.StatusNoContent),
-			ReturnBodyRaw("hello world"),
+			ReturnBody("hello world"),
 		).
 		WithRequest(http.MethodPut, "/second",
 			ExpectQueryParamValues("param", []string{"value1", "value2"}),
@@ -95,7 +97,7 @@ func Test_httpMockJSON(t *testing.T) {
 			ReturnError(fmt.Errorf("oops")),
 		)
 
-	assert.Equal(t, []*request{
+	assert.Equal(t, []*Request{
 		{
 			path:         "/first",
 			method:       http.MethodPost,
@@ -107,7 +109,8 @@ func Test_httpMockJSON(t *testing.T) {
 			expectedQueryParams: url.Values{
 				"param1": {"value1"},
 			},
-			expectedJSON: []byte(`{"foo": "bar"}`),
+			expectedJSON:        []byte(`{"foo": "bar"}`),
+			expectedTimesCalled: 1,
 		},
 		{
 			path:         "/second",
@@ -116,11 +119,13 @@ func Test_httpMockJSON(t *testing.T) {
 			expectedQueryParams: url.Values{
 				"param": {"value1", "value2"},
 			},
+			expectedTimesCalled: 1,
 		},
 		{
-			path:        "/third",
-			method:      http.MethodPost,
-			returnError: fmt.Errorf("oops"),
+			path:                "/third",
+			method:              http.MethodPost,
+			returnError:         fmt.Errorf("oops"),
+			expectedTimesCalled: 1,
 		},
 	}, mock.transport.requests)
 
@@ -133,7 +138,7 @@ func Test_httpMockJSON(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, response1.StatusCode, http.StatusNoContent)
-	assert.True(t, mock.transport.requests[0].called)
+	assert.Equal(t, 1, mock.transport.requests[0].timesCalled)
 	assert.False(t, mockT.Failed())
 
 	req2, _ := http.NewRequest(http.MethodPut, "/second?param=value1&param=value2", nil)
@@ -144,7 +149,7 @@ func Test_httpMockJSON(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, response2.StatusCode, http.StatusOK)
-	assert.True(t, mock.transport.requests[1].called)
+	assert.Equal(t, 1, mock.transport.requests[1].timesCalled)
 	assert.False(t, mockT.Failed())
 
 	req3, _ := http.NewRequest(http.MethodPost, "/third", nil)
@@ -154,7 +159,7 @@ func Test_httpMockJSON(t *testing.T) {
 	}
 
 	assert.Error(t, err)
-	assert.True(t, mock.transport.requests[2].called)
+	assert.Equal(t, 1, mock.transport.requests[2].timesCalled)
 	assert.False(t, mockT.Failed())
 
 	req4, _ := http.NewRequest(http.MethodOptions, "/toomuch", nil)
@@ -171,7 +176,7 @@ func Test_httpMock_wrong_call(t *testing.T) {
 	mockT := new(testing.T)
 	mock := New(mockT)
 
-	assert.Equal(t, []*request{}, mock.transport.requests)
+	assert.Equal(t, []*Request{}, mock.transport.requests)
 
 	req0, _ := http.NewRequest(http.MethodGet, "/bad", nil)
 	response, err := mock.Do(req0)

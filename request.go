@@ -1,13 +1,14 @@
 package httpmock
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
-type request struct {
+type Request struct {
 	method              string
 	path                string
 	returnStatus        int
@@ -17,10 +18,125 @@ type request struct {
 	expectedJSON        []byte
 	expectedHeaders     http.Header
 	expectedQueryParams url.Values
-	called              bool
+	expectedTimesCalled int
+	timesCalled         int
 }
 
-func (r *request) String() string {
+func (r *Request) Times(times int) *Request {
+	r.expectedTimesCalled = times
+	return r
+}
+
+func ReturnStatus(status int) RequestOption {
+	return func(r *Request) {
+		r.ReturnStatus(status)
+	}
+}
+
+func (r *Request) ReturnStatus(status int) *Request {
+	r.returnStatus = status
+	return r
+}
+
+func ReturnBody(body string) RequestOption {
+	return func(r *Request) {
+		r.ReturnBody(body)
+	}
+}
+
+func (r *Request) ReturnBody(body string) *Request {
+	r.returnBody = body
+	return r
+}
+
+func ReturnBodyFromObject(object interface{}) RequestOption {
+	return func(r *Request) {
+		r.ReturnBodyFromObject(object)
+	}
+}
+
+func (r *Request) ReturnBodyFromObject(object interface{}) *Request {
+	body, _ := json.Marshal(&object)
+	r.returnBody = string(body)
+	return r
+}
+
+func ReturnError(err error) RequestOption {
+	return func(r *Request) {
+		r.ReturnError(err)
+	}
+}
+
+func (r *Request) ReturnError(err error) *Request {
+	r.returnError = err
+	return r
+}
+
+func ExpectBody(expectedBody string) RequestOption {
+	return func(r *Request) {
+		r.ExpectBody(expectedBody)
+	}
+}
+
+func (r *Request) ExpectBody(body string) *Request {
+	r.expectedBody = body
+	return r
+}
+
+func ExpectJSON(expectedJSON string) RequestOption {
+	return func(r *Request) {
+		r.ExpectJSON(expectedJSON)
+	}
+}
+
+func (r *Request) ExpectJSON(data string) *Request {
+	r.expectedJSON = []byte(data)
+	return r
+}
+
+func ExpectHeader(name string, values []string) RequestOption {
+	return func(r *Request) {
+		r.ExpectHeader(name, values)
+	}
+}
+
+func (r *Request) ExpectHeader(name string, values []string) *Request {
+	if r.expectedHeaders == nil {
+		r.expectedHeaders = make(map[string][]string)
+	}
+	r.expectedHeaders[name] = values
+	return r
+}
+
+func ExpectQueryParamValues(name string, values []string) RequestOption {
+	return func(r *Request) {
+		r.ExpectQueryParamsValues(name, values)
+	}
+}
+
+func (r *Request) ExpectQueryParamsValues(name string, values []string) *Request {
+	if r.expectedQueryParams == nil {
+		r.expectedQueryParams = make(url.Values)
+	}
+	r.expectedQueryParams[name] = values
+	return r
+}
+
+func ExpectQueryParam(name, value string) RequestOption {
+	return func(r *Request) {
+		r.ExpectQueryParams(name, value)
+	}
+}
+
+func (r *Request) ExpectQueryParams(name, value string) *Request {
+	if r.expectedQueryParams == nil {
+		r.expectedQueryParams = make(url.Values)
+	}
+	r.expectedQueryParams[name] = []string{value}
+	return r
+}
+
+func (r *Request) String() string {
 	builder := strings.Builder{}
 
 	builder.WriteString(fmt.Sprintf("Request: [%s] %q\n", r.method, r.path))
