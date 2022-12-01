@@ -1,5 +1,7 @@
 # httpmock
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/oupo1337/httpmock)](https://goreportcard.com/report/github.com/oupo1337/httpmock)
+
 HTTPMock is a library to easily mock your http clients and describe their behavior.
 
 It's designed to be as simple as possible, first you describe the client behavior :
@@ -31,6 +33,16 @@ func Test_basic(t *testing.T) {
     // We check that all expected requests were done. 
     mock.AssertExpectations()
 }
+
+// Or you can declare your mock in a different way without using option functions
+// similar way to the testify/mock package
+func Test_basic(t *testing.T) {
+	mock := httpmock.New(t)
+	mock.On(http.MethodGet, "/path").ReturnStatus(http.StatusOk)
+	
+	doSomething(mock)
+	mock.AssertExpectations()
+}
 ```
 
 ### Advanced
@@ -50,7 +62,7 @@ func Test_advanced(t *testing.T) {
             httpmock.ExpectBody(`{"some": "data"}`),
             httpmock.ExpectHeader("Authorization", []string{"Bearer token"}),
             httpmock.ReturnStatus(http.StatusCreated),
-            httpmock.ReturnBodyRaw(`{"a": "response"}`),
+            httpmock.ReturnBody(`{"a": "response"}`),
         ).
         WithRequest(http.MethodDelete, "/route",
             httpmock.ExpectQueryParam("param", "value"),
@@ -62,6 +74,24 @@ func Test_advanced(t *testing.T) {
 
     // We check that all expected requests were done. 
     mock.AssertExpectations()
+}
+
+// Or you can declare your mock in a different way without using option functions
+// similar way to the testify/mock package
+func Test_advanced(t *testing.T) {
+	mock := httpmock.New(t)
+	mock.On(http.MethodPost, "/form").
+		ExpectBody(`{"some": "data"}`).
+		ExpectHeader("Authorization", []string{"Bearer token"}).
+		ReturnStatus(http.StatusCreated).
+		ReturnBody(`{"a": "response"}`)
+	
+	mock.On(http.MethodDelete, "/route").
+		ExpectQueryParam("param", "value").
+		ReturnStatus(http.StatusNoContent)
+	
+	doSomething(mock)
+	mock.AssertExpectations()
 }
 ```
 
