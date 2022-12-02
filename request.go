@@ -110,11 +110,11 @@ func (r *Request) ExpectHeader(name string, values []string) *Request {
 
 func ExpectQueryParamValues(name string, values []string) RequestOption {
 	return func(r *Request) {
-		r.ExpectQueryParamsValues(name, values)
+		r.ExpectQueryParamValues(name, values)
 	}
 }
 
-func (r *Request) ExpectQueryParamsValues(name string, values []string) *Request {
+func (r *Request) ExpectQueryParamValues(name string, values []string) *Request {
 	if r.expectedQueryParams == nil {
 		r.expectedQueryParams = make(url.Values)
 	}
@@ -124,11 +124,11 @@ func (r *Request) ExpectQueryParamsValues(name string, values []string) *Request
 
 func ExpectQueryParam(name, value string) RequestOption {
 	return func(r *Request) {
-		r.ExpectQueryParams(name, value)
+		r.ExpectQueryParam(name, value)
 	}
 }
 
-func (r *Request) ExpectQueryParams(name, value string) *Request {
+func (r *Request) ExpectQueryParam(name, value string) *Request {
 	if r.expectedQueryParams == nil {
 		r.expectedQueryParams = make(url.Values)
 	}

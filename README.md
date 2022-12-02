@@ -36,9 +36,9 @@ func Test_basic(t *testing.T) {
 
 // Or you can declare your mock in a different way without using option functions
 // similar way to the testify/mock package
-func Test_basic(t *testing.T) {
+func Test_basic_bis(t *testing.T) {
 	mock := httpmock.New(t)
-	mock.On(http.MethodGet, "/path").ReturnStatus(http.StatusOk)
+	mock.On(http.MethodGet, "/path").ReturnStatus(http.StatusOK)
 	
 	doSomething(mock)
 	mock.AssertExpectations()
@@ -78,7 +78,7 @@ func Test_advanced(t *testing.T) {
 
 // Or you can declare your mock in a different way without using option functions
 // similar way to the testify/mock package
-func Test_advanced(t *testing.T) {
+func Test_advanced_bis(t *testing.T) {
 	mock := httpmock.New(t)
 	mock.On(http.MethodPost, "/form").
 		ExpectBody(`{"some": "data"}`).
