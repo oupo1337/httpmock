@@ -1,0 +1,28 @@
+name: tests
+
+on:
+  pull_request:
+    branches: [ master ]
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: run unit tests
+    steps:
+      - uses: actions/checkout@v3
+      - run: go test -v ./
+        shell: bash
+
+  lint:
+    runs-on: ubuntu-latest
+    name: run linter
+    steps:
+      - uses: actions/checkout@v3
+      - uses: golangci/golangci-lint-action@v3.2.0
+        with:
+          args: --timeout=5m
+
