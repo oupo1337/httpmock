@@ -104,6 +104,19 @@ func Test_simplePostReturnsBodyFromObject(t *testing.T) {
 func Test_simpleRequestGoRoutines(t *testing.T) {
 	times := 1000
 
+	mock := httpmock.New(t).
+		WithRequest(http.MethodGet, "/path",
+			httpmock.ReturnStatus(http.StatusOK),
+			httpmock.Times(times),
+		)
+
+	simpleRequestGoRoutines(mock, times)
+	mock.AssertExpectations()
+}
+
+func Test_simpleRequestGoRoutines_bis(t *testing.T) {
+	times := 1000
+
 	mock := httpmock.New(t)
 	mock.On(http.MethodGet, "/path").ReturnStatus(http.StatusOK).Times(times)
 

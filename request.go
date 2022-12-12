@@ -22,6 +22,12 @@ type Request struct {
 	timesCalled         int
 }
 
+func Times(times int) RequestOption {
+	return func(r *Request) {
+		r.Times(times)
+	}
+}
+
 func (r *Request) Times(times int) *Request {
 	r.expectedTimesCalled = times
 	return r
