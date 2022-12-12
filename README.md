@@ -4,14 +4,14 @@
 
 HTTPMock is a library to easily mock your http clients and describe their behavior.
 
-It's designed to be as simple as possible, first you describe the client behavior :
- - How many calls should it do ? On which path ?
- - What status should it return ?
- - Should it receive headers ? Query parameters ? A body ?
+It's designed to be as simple as possible, first you describe the client behavior:
+ - How many calls should it make? On which path?
+ - What HTTP status codes should it return?
+ - Should it receive headers? Query parameters? A body?
 
 You can now use the mock client as a regular HTTP client in your code.
 
-Finally, you check that all expected calls were done with the mock client by the tested code. 
+Finally, you check that all expected calls were done with the mock client by the tested code.
 
 ## Examples
 
@@ -24,22 +24,22 @@ func Test_basic(t *testing.T) {
     // It will return a 200 status code.
     mock := httpmock.New(t).
         WithRequest(http.MethodGet, "/path",
-            httpmock.ReturnStatus(http.StatusOK), 
+            httpmock.ReturnStatus(http.StatusOK),
         )
-	
+
     // Do something with mock variable (It's a regular http.Client object).
     doSomething(mock)
-	
-    // We check that all expected requests were done. 
+
+    // We check that all expected requests were done.
     mock.AssertExpectations()
 }
 
 // Or you can declare your mock in a different way without using option functions
-// similar way to the testify/mock package
+// similar way to the testify/mock package.
 func Test_basic_bis(t *testing.T) {
 	mock := httpmock.New(t)
 	mock.On(http.MethodGet, "/path").ReturnStatus(http.StatusOK)
-	
+
 	doSomething(mock)
 	mock.AssertExpectations()
 }
@@ -52,7 +52,7 @@ func Test_advanced(t *testing.T) {
     // We declare a mock variable and its behavior.
     // It's an HTTP client waiting for a POST request on /form.
     // It will return a 201 status code.
-    // It expects a body, an authorization header and will return a body
+    // It expects a body, an authorization header and will return a body.
     //
     // It's also waiting for a DELETE request on /route
     // returning a 204 status code.
@@ -69,15 +69,15 @@ func Test_advanced(t *testing.T) {
             httpmock.ReturnStatus(http.StatusNoContent),
         )
 
-    // Do something with mock variable (It's a regular http.Client object).
+    // Do something with the mock variable (It's a regular http.Client object).
     doSomething(mock)
 
-    // We check that all expected requests were done. 
+    // We check that all expected requests were made.
     mock.AssertExpectations()
 }
 
 // Or you can declare your mock in a different way without using option functions
-// similar way to the testify/mock package
+// similar way to the testify/mock package.
 func Test_advanced_bis(t *testing.T) {
 	mock := httpmock.New(t)
 	mock.On(http.MethodPost, "/form").
@@ -85,11 +85,11 @@ func Test_advanced_bis(t *testing.T) {
 		ExpectHeader("Authorization", []string{"Bearer token"}).
 		ReturnStatus(http.StatusCreated).
 		ReturnBody(`{"a": "response"}`)
-	
+
 	mock.On(http.MethodDelete, "/route").
 		ExpectQueryParam("param", "value").
 		ReturnStatus(http.StatusNoContent)
-	
+
 	doSomething(mock)
 	mock.AssertExpectations()
 }
