@@ -187,3 +187,51 @@ func Test_httpMock_wrong_call(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, mockT.Failed())
 }
+
+func Test_httpMock_return_headers(t *testing.T) {
+	mockT := new(testing.T)
+	mock := New(mockT).
+		WithRequest(http.MethodPost, "/first",
+			ExpectHeader("Authorization", []string{"Bearer TOKEN"}),
+			ExpectJSON(`{"foo": "bar"}`),
+			ExpectQueryParam("param1", "value1"),
+			ReturnStatus(http.StatusNoContent),
+			ReturnBody("hello world"),
+			ReturnHeader("Content-Type", []string{"application/json"}),
+			ReturnHeader("Content-Length", []string{"1024"}),
+		)
+
+	assert.Equal(t, []*Request{
+		{
+			path:         "/first",
+			method:       http.MethodPost,
+			returnStatus: http.StatusNoContent,
+			returnBody:   "hello world",
+			returnHeaders: map[string][]string{
+				"Content-Type":   {"application/json"},
+				"Content-Length": {"1024"},
+			},
+			expectedHeaders: map[string][]string{
+				"Authorization": {"Bearer TOKEN"},
+			},
+			expectedQueryParams: url.Values{
+				"param1": {"value1"},
+			},
+			expectedJSON:        []byte(`{"foo": "bar"}`),
+			expectedTimesCalled: 1,
+		},
+	}, mock.transport.requests)
+
+	req, _ := http.NewRequest(http.MethodPost, "/first?param1=value1", strings.NewReader(`{"foo": "bar"}`))
+	req.Header.Add("Authorization", "Bearer TOKEN")
+	response, err := mock.Do(req)
+	if response.Body != nil {
+		_ = response.Body.Close()
+	}
+
+	fmt.Println(response.ContentLength)
+	assert.NoError(t, err)
+	assert.Equal(t, response.StatusCode, http.StatusNoContent)
+	assert.Equal(t, 1, mock.transport.requests[0].timesCalled)
+	assert.False(t, mockT.Failed())
+}

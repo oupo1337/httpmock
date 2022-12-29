@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -14,6 +15,7 @@ type Request struct {
 	returnStatus        int
 	returnBody          string
 	returnError         error
+	returnHeaders       http.Header
 	expectedBody        string
 	expectedJSON        []byte
 	expectedHeaders     http.Header
@@ -75,6 +77,20 @@ func ReturnError(err error) RequestOption {
 
 func (r *Request) ReturnError(err error) *Request {
 	r.returnError = err
+	return r
+}
+
+func ReturnHeader(name string, values []string) RequestOption {
+	return func(r *Request) {
+		r.ReturnHeader(name, values)
+	}
+}
+
+func (r *Request) ReturnHeader(name string, values []string) *Request {
+	if r.returnHeaders == nil {
+		r.returnHeaders = make(map[string][]string)
+	}
+	r.returnHeaders[name] = values
 	return r
 }
 
@@ -140,6 +156,17 @@ func (r *Request) ExpectQueryParam(name, value string) *Request {
 	}
 	r.expectedQueryParams[name] = []string{value}
 	return r
+}
+
+func (r *Request) ContentLength() int64 {
+	contentLengthHeader := r.returnHeaders.Get("content-length")
+	if len(contentLengthHeader) > 0 {
+		contentLength, err := strconv.ParseInt(contentLengthHeader, 10, 64)
+		if err == nil {
+			return contentLength
+		}
+	}
+	return int64(len(r.returnBody))
 }
 
 func (r *Request) String() string {

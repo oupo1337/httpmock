@@ -116,9 +116,13 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	if req.returnError != nil {
 		return nil, req.returnError
 	}
+
 	return &http.Response{
-		Status:     http.StatusText(req.returnStatus),
-		StatusCode: req.returnStatus,
-		Body:       io.NopCloser(strings.NewReader(req.returnBody)),
+		Status:        http.StatusText(req.returnStatus),
+		StatusCode:    req.returnStatus,
+		Header:        req.returnHeaders,
+		ContentLength: req.ContentLength(),
+
+		Body: io.NopCloser(strings.NewReader(req.returnBody)),
 	}, nil
 }
