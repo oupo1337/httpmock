@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-var UnexpectedRequestErr = fmt.Errorf("unexpected Request")
+var UnexpectedRequestErr = fmt.Errorf("unexpected request")
 
 type transport struct {
 	m        sync.Mutex
@@ -104,11 +104,11 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 
 	req, closestReq := t.matchRequest(r)
 	if closestReq != nil {
-		t.t.Errorf("Unexpected Request on route [%s] %q the closest Request I have is:\n%s", r.Method, r.URL.Path, closestReq.String())
+		t.t.Errorf("Unexpected request on route [%s] %q the closest request I have is:\n%s", r.Method, r.URL.Path, closestReq.String())
 		return nil, UnexpectedRequestErr
 	}
 	if req == nil {
-		t.t.Errorf("Unexpected Request on route [%s] %q", r.Method, r.URL.Path)
+		t.t.Errorf("Unexpected request on route [%s] %q", r.Method, r.URL.Path)
 		return nil, UnexpectedRequestErr
 	}
 	req.timesCalled += 1
@@ -122,7 +122,6 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 		StatusCode:    req.returnStatus,
 		Header:        req.returnHeaders,
 		ContentLength: req.ContentLength(),
-
-		Body: io.NopCloser(strings.NewReader(req.returnBody)),
+		Body:          io.NopCloser(strings.NewReader(req.returnBody)),
 	}, nil
 }

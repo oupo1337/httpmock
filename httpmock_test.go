@@ -229,7 +229,6 @@ func Test_httpMock_return_headers(t *testing.T) {
 		_ = response.Body.Close()
 	}
 
-	fmt.Println(response.ContentLength)
 	assert.NoError(t, err)
 	assert.Equal(t, response.StatusCode, http.StatusNoContent)
 	assert.Equal(t, 1, mock.transport.requests[0].timesCalled)

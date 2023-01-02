@@ -108,6 +108,7 @@ See example file [here](examples/example_test.go)
 | ReturnStatus           | Sets the http status code returned by the request.                                               | int              |
 | ReturnBodyRaw          | Sets the body returned by the request.                                                           | string           |
 | ReturnBodyFromObject   | Sets the body returned by the request from an object. (Using json.Marshal function)              | interface{}      |
+| ReturnHeader           | Sets an header to be returned by the request.                                                    | string, []string |
 | ReturnError            | Sets an error returned by the http client.                                                       | error            |
 | ExpectBody             | Will expect a body in the received request and asserts that strings are equal.                   | string           |
 | ExpectJSON             | Will expect a body in the received request and asserts that the JSONs are equal.                 | string           |

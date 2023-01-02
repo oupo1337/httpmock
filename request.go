@@ -159,7 +159,7 @@ func (r *Request) ExpectQueryParam(name, value string) *Request {
 }
 
 func (r *Request) ContentLength() int64 {
-	contentLengthHeader := r.returnHeaders.Get("content-length")
+	contentLengthHeader := r.returnHeaders.Get("Content-Length")
 	if len(contentLengthHeader) > 0 {
 		contentLength, err := strconv.ParseInt(contentLengthHeader, 10, 64)
 		if err == nil {
