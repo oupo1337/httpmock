@@ -1,6 +1,6 @@
 module github.com/oupo1337/httpmock
 
-go 1.18
+go 1.20
 
 require github.com/stretchr/testify v1.8.0
 
